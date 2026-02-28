@@ -30,7 +30,7 @@ export function useMessages(conversationId: string | undefined) {
   }, [supabase, conversationId])
 
   const sendMessage = useCallback(async (
-    options: Omit<SendMessageOptions, 'history'>,
+    options: Omit<SendMessageOptions, 'history' | 'apiKey'>,
     onChunk?: (chunk: string) => void,
   ): Promise<string> => {
     if (!supabase || !conversationId) throw new Error('Not ready')
@@ -78,6 +78,7 @@ export function useMessages(conversationId: string | undefined) {
         ...options,
         conversationId,
         history: currentMessages,
+        apiKey: '',
       }
 
       for await (const chunk of streamChat(streamOptions)) {

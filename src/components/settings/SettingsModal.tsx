@@ -2,141 +2,16 @@ import React, { useState } from 'react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
-import { Badge } from '../ui/Badge'
-import { useApiKeys } from '../../contexts/ApiKeyContext'
 import { useSupabase } from '../../contexts/SupabaseContext'
-import type { ApiKey } from '../../types'
-import { Trash2, Eye, EyeOff, Plus, Key, Database, Link2, Info } from 'lucide-react'
-import { PROVIDER_LABELS } from '../../lib/models'
 import { getSupabaseConfig } from '../../lib/supabase'
+import { Database, Link2, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-type Tab = 'api-keys' | 'supabase' | 'about'
+type Tab = 'supabase' | 'about'
 
 interface SettingsModalProps {
   open: boolean
   onClose: () => void
-}
-
-const PROVIDERS: ApiKey['provider'][] = ['openai', 'anthropic', 'google', 'mistral', 'groq']
-
-function ApiKeysTab() {
-  const { apiKeys, addApiKey, removeApiKey } = useApiKeys()
-  const [selected, setSelected] = useState<ApiKey['provider']>('openai')
-  const [keyValue, setKeyValue] = useState('')
-  const [label, setLabel] = useState('')
-  const [show, setShow] = useState(false)
-  const [saving, setSaving] = useState(false)
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!keyValue.trim()) return
-    setSaving(true)
-    try {
-      await addApiKey(selected, label.trim() || PROVIDER_LABELS[selected] || selected, keyValue.trim())
-      toast.success('API key saved')
-      setKeyValue('')
-      setLabel('')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save key')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-          <Key size={14} className="text-onyx-400" />
-          Saved API Keys
-        </h3>
-        {apiKeys.length === 0 ? (
-          <p className="text-xs text-gray-500">No API keys added yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {apiKeys.map((k) => (
-              <div
-                key={k.id}
-                className="flex items-center justify-between p-2.5 bg-gray-900 rounded-lg border border-gray-800"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="purple">{PROVIDER_LABELS[k.provider] ?? k.provider}</Badge>
-                    <span className="text-sm text-gray-300">{k.label}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 font-mono mt-0.5">{k.key_preview}</p>
-                </div>
-                <button
-                  onClick={() => {
-                    removeApiKey(k.id)
-                    toast.success('API key removed')
-                  }}
-                  className="text-gray-600 hover:text-red-400 transition-colors p-1 rounded"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-gray-800 pt-4">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-          <Plus size={14} className="text-onyx-400" />
-          Add API Key
-        </h3>
-        <form onSubmit={handleAdd} className="space-y-3">
-          <div className="flex gap-2">
-            {PROVIDERS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setSelected(p)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  selected === p
-                    ? 'bg-onyx-700 text-onyx-300'
-                    : 'bg-gray-800 text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                {PROVIDER_LABELS[p]}
-              </button>
-            ))}
-          </div>
-
-          <Input
-            label="Label (optional)"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder={`My ${PROVIDER_LABELS[selected]} Key`}
-          />
-
-          <div className="relative">
-            <Input
-              label="API Key"
-              type={show ? 'text' : 'password'}
-              value={keyValue}
-              onChange={(e) => setKeyValue(e.target.value)}
-              placeholder="sk-..."
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShow((v) => !v)}
-              className="absolute right-3 top-8 text-gray-500 hover:text-gray-300"
-            >
-              {show ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-          </div>
-
-          <Button type="submit" loading={saving} disabled={!keyValue.trim()} className="w-full">
-            Save Key
-          </Button>
-        </form>
-      </div>
-    </div>
-  )
 }
 
 function SupabaseTab() {
@@ -153,7 +28,7 @@ function SupabaseTab() {
     try {
       await configure(url.trim(), anonKey.trim())
       toast.success('Supabase configured successfully')
-    } catch (err) {
+    } catch {
       toast.error('Failed to connect to Supabase')
     } finally {
       setSaving(false)
@@ -274,23 +149,7 @@ create policy "Users own messages" on messages
       where conversations.id = messages.conversation_id
         and conversations.user_id = auth.uid()
     )
-  );
-
--- API Keys
-create table api_keys (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
-  provider text not null,
-  label text not null,
-  key_hash text not null,
-  key_preview text not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique(user_id, provider)
-);
-alter table api_keys enable row level security;
-create policy "Users own api_keys" on api_keys
-  for all using (auth.uid() = user_id);`}
+  );`}
         </pre>
       </div>
     </div>
@@ -310,16 +169,15 @@ function AboutTab() {
         </div>
       </div>
       <div className="space-y-3 text-sm text-gray-400">
-        <p>A powerful multi-provider AI chat interface with workspace organization.</p>
+        <p>A powerful AI chat interface powered by Puter AI with web search capabilities.</p>
         <div className="border-t border-gray-800 pt-3 space-y-1.5">
           <p className="font-medium text-gray-300">Features</p>
           <ul className="space-y-1 text-xs">
             {[
-              'Multi-provider support (OpenAI, Anthropic, Google, Mistral, Groq)',
+              'Puter AI streaming with web search',
               'Workspace-based organization',
               'Streaming responses',
               'Markdown rendering with syntax highlighting',
-              'BYOK — Bring Your Own Keys',
               'BYOS — Bring Your Own Supabase',
             ].map((f) => (
               <li key={f} className="flex items-start gap-2">
@@ -335,10 +193,9 @@ function AboutTab() {
 }
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
-  const [tab, setTab] = useState<Tab>('api-keys')
+  const [tab, setTab] = useState<Tab>('supabase')
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'api-keys', label: 'API Keys', icon: <Key size={14} /> },
     { id: 'supabase', label: 'Supabase', icon: <Database size={14} /> },
     { id: 'about', label: 'About', icon: <Info size={14} /> },
   ]
@@ -364,7 +221,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         </nav>
 
         <div className="flex-1 overflow-y-auto">
-          {tab === 'api-keys' && <ApiKeysTab />}
           {tab === 'supabase' && <SupabaseTab />}
           {tab === 'about' && <AboutTab />}
         </div>

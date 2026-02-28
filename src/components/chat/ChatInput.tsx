@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { Send, Square } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Model } from '../../types'
-import { MODELS, PROVIDER_LABELS } from '../../lib/models'
+import { MODELS } from '../../lib/models'
 
 interface ChatInputProps {
   onSend: (content: string) => void
@@ -50,13 +50,6 @@ export function ChatInput({
     }
   }
 
-  const grouped = MODELS.reduce<Record<string, Model[]>>((acc, m) => {
-    const p = m.provider
-    if (!acc[p]) acc[p] = []
-    acc[p].push(m)
-    return acc
-  }, {})
-
   return (
     <div className="border-t border-gray-800 bg-gray-950 p-4">
       <div className="max-w-4xl mx-auto">
@@ -82,14 +75,10 @@ export function ChatInput({
                 }}
                 className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-onyx-500 cursor-pointer"
               >
-                {Object.entries(grouped).map(([provider, models]) => (
-                  <optgroup key={provider} label={PROVIDER_LABELS[provider] ?? provider}>
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </optgroup>
+                {MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
                 ))}
               </select>
 
@@ -126,7 +115,7 @@ export function ChatInput({
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-2">
-          Press Enter to send, Shift+Enter for new line
+          Press Enter to send, Shift+Enter for new line • Powered by Puter AI with web search
         </p>
       </div>
     </div>
