@@ -12,21 +12,10 @@ export interface Profile {
   updated_at: string
 }
 
-export interface ApiKey {
-  id: string
-  user_id: string
-  provider: 'openai' | 'anthropic' | 'google' | 'mistral' | 'cohere' | 'groq' | 'custom'
-  label: string
-  key_hash: string
-  key_preview: string
-  created_at: string
-  updated_at: string
-}
-
 export interface Model {
   id: string
   name: string
-  provider: ApiKey['provider'] | 'custom'
+  provider: 'puter'
   description: string
   context_window: number
   supports_vision: boolean

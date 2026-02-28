@@ -1,7 +1,6 @@
 import { Toaster } from 'react-hot-toast'
 import { SupabaseProvider, useSupabase } from './contexts/SupabaseContext'
 import { WorkspaceProvider } from './contexts/WorkspaceContext'
-import { ApiKeyProvider } from './contexts/ApiKeyContext'
 import { SetupPage } from './pages/SetupPage'
 import { AuthPage } from './pages/AuthPage'
 import { ChatPage } from './pages/ChatPage'
@@ -35,27 +34,25 @@ function AppContent() {
 export default function App() {
   return (
     <SupabaseProvider>
-      <ApiKeyProvider>
-        <AppContent />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#1f2937',
-              color: '#f3f4f6',
-              border: '1px solid #374151',
-              borderRadius: '12px',
-              fontSize: '13px',
-            },
-            success: {
-              iconTheme: { primary: '#8b5cf6', secondary: '#fff' },
-            },
-            error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' },
-            },
-          }}
-        />
-      </ApiKeyProvider>
+      <AppContent />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#1f2937',
+            color: '#f3f4f6',
+            border: '1px solid #374151',
+            borderRadius: '12px',
+            fontSize: '13px',
+          },
+          success: {
+            iconTheme: { primary: '#8b5cf6', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
+        }}
+      />
     </SupabaseProvider>
   )
 }

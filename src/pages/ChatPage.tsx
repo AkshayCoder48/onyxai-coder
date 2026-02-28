@@ -6,7 +6,6 @@ import { SettingsModal } from '../components/settings/SettingsModal'
 import { WorkspaceModal } from '../components/workspace/WorkspaceModal'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { useWorkspace } from '../contexts/WorkspaceContext'
-import { useApiKeys } from '../contexts/ApiKeyContext'
 import { useConversations } from '../hooks/useConversations'
 import { useMessages } from '../hooks/useMessages'
 import { MODELS, getModelById } from '../lib/models'
@@ -18,7 +17,6 @@ import toast from 'react-hot-toast'
 export function ChatPage() {
   const { user, signOut } = useSupabase()
   const { workspaces, activeWorkspace, setActiveWorkspace, createWorkspace, updateWorkspace } = useWorkspace()
-  const { getKeyForProvider } = useApiKeys()
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -69,13 +67,6 @@ export function ChatPage() {
   }, [deleteConversation, activeConversationId])
 
   const handleSend = useCallback(async (content: string) => {
-    const apiKey = getKeyForProvider(selectedModel.provider)
-    if (!apiKey) {
-      toast.error(`No API key for ${selectedModel.provider}. Add one in Settings.`)
-      setSettingsOpen(true)
-      return
-    }
-
     let convId = activeConversationId
 
     if (!convId) {
@@ -100,7 +91,6 @@ export function ChatPage() {
           conversationId: convId,
           content,
           model: selectedModel,
-          apiKey,
           systemPrompt: activeWorkspace?.system_prompt ?? undefined,
           temperature: activeWorkspace?.temperature,
           maxTokens: activeWorkspace?.max_tokens,
@@ -122,7 +112,6 @@ export function ChatPage() {
     activeConversationId,
     activeWorkspace,
     selectedModel,
-    getKeyForProvider,
     createConversation,
     sendMessage,
     touchConversation,
