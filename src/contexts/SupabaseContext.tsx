@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { User, Session } from '@supabase/supabase-js'
-import { getSupabase, saveSupabaseConfig, clearSupabaseConfig } from '../lib/supabase'
+import { getSupabase, saveSupabaseConfig, clearSupabaseConfig, isDemoMode, enableDemoMode, disableDemoMode } from '../lib/supabase'
 
 interface SupabaseContextValue {
   supabase: SupabaseClient | null
@@ -9,8 +9,10 @@ interface SupabaseContextValue {
   session: Session | null
   loading: boolean
   configured: boolean
+  demoMode: boolean
   configure: (url: string, anonKey: string) => Promise<void>
   disconnect: () => void
+  enableDemo: () => void
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, fullName?: string) => Promise<void>
   signOut: () => Promise<void>
@@ -20,12 +22,16 @@ interface SupabaseContextValue {
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(getSupabase)
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(() => {
+    const isDemo = isDemoMode()
+    return isDemo ? null : getSupabase()
+  })
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => isDemoMode())
+  const [demoMode, setDemoMode] = useState(() => isDemoMode())
 
-  const configured = supabase !== null
+  const configured = supabase !== null || demoMode
 
   useEffect(() => {
     if (!supabase) {
@@ -49,6 +55,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   const configure = useCallback(async (url: string, anonKey: string) => {
     saveSupabaseConfig(url, anonKey)
+    setDemoMode(false)
     const client = getSupabase()
     setSupabase(client)
     setLoading(true)
@@ -60,8 +67,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
+  const enableDemo = useCallback(() => {
+    enableDemoMode()
+    setDemoMode(true)
+    setUser(null)
+    setSession(null)
+    setLoading(false)
+    setSupabase(null)
+  }, [])
+
   const disconnect = useCallback(() => {
     clearSupabaseConfig()
+    disableDemoMode()
+    setDemoMode(false)
     setSupabase(null)
     setUser(null)
     setSession(null)
@@ -105,8 +123,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         session,
         loading,
         configured,
+        demoMode,
         configure,
         disconnect,
+        enableDemo,
         signIn,
         signUp,
         signOut,

@@ -6,7 +6,7 @@ import { Database, MessageSquare, Key, Sparkles, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export function SetupPage() {
-  const { configure } = useSupabase()
+  const { configure, enableDemo } = useSupabase()
   const [url, setUrl] = useState('')
   const [anonKey, setAnonKey] = useState('')
   const [loading, setLoading] = useState(false)
@@ -25,7 +25,8 @@ export function SetupPage() {
   }
 
   const handleSkip = () => {
-    configure('https://placeholder.supabase.co', 'placeholder-key').catch(() => {})
+    enableDemo()
+    toast.success('Demo mode enabled!')
   }
 
   return (

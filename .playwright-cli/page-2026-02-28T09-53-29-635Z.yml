@@ -1,0 +1,40 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - heading "Welcome to OnyxGPT" [level=1] [ref=e9]
+      - paragraph [ref=e10]: Connect your Supabase project to get started
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - img [ref=e13]
+        - paragraph [ref=e15]: OnyxGPT uses Bring Your Own Supabase (BYOS). Your data is stored in your own project. No data is sent to any third party.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Supabase Project URL
+          - textbox "Supabase Project URL" [ref=e19]:
+            - /placeholder: https://xxxx.supabase.co
+          - paragraph [ref=e20]: Found in your Supabase project settings
+        - generic [ref=e21]:
+          - generic [ref=e22]: Anon / Public Key
+          - textbox "Anon / Public Key" [ref=e23]:
+            - /placeholder: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          - paragraph [ref=e24]: Found in Settings > API in your Supabase dashboard
+        - button "Connect Supabase" [disabled] [ref=e25]:
+          - img [ref=e26]
+          - text: Connect Supabase
+      - generic [ref=e34]: or
+      - button "Continue without Supabase (demo mode)" [active] [ref=e35] [cursor=pointer]
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - img [ref=e39]
+        - paragraph [ref=e43]: Your Keys
+        - paragraph [ref=e44]: Use your own API keys
+      - generic [ref=e45]:
+        - img [ref=e47]
+        - paragraph [ref=e51]: Your Data
+        - paragraph [ref=e52]: Stored in your Supabase
+      - generic [ref=e53]:
+        - img [ref=e55]
+        - paragraph [ref=e58]: Any Model
+        - paragraph [ref=e59]: OpenAI, Anthropic & more
+  - status [ref=e65]: Demo mode enabled!

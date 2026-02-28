@@ -3,14 +3,34 @@ import type { Message, SendMessageOptions } from '../types'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { streamChat } from '../lib/openai'
 
+const DEMO_MESSAGES_KEY = 'demo_messages'
+
+const getDemoMessages = (): Message[] => {
+  try {
+    const stored = localStorage.getItem(DEMO_MESSAGES_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+const saveDemoMessages = (messages: Message[]) => {
+  localStorage.setItem(DEMO_MESSAGES_KEY, JSON.stringify(messages))
+}
+
 export function useMessages(conversationId: string | undefined) {
-  const { supabase } = useSupabase()
+  const { supabase, demoMode } = useSupabase()
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchMessages = useCallback(async () => {
+    if (demoMode) {
+      const demoMsgs = getDemoMessages().filter(m => m.conversation_id === conversationId)
+      setMessages(demoMsgs)
+      return
+    }
     if (!supabase || !conversationId) {
       setMessages([])
       return
@@ -27,13 +47,13 @@ export function useMessages(conversationId: string | undefined) {
     } finally {
       setLoading(false)
     }
-  }, [supabase, conversationId])
+  }, [supabase, conversationId, demoMode])
 
   const sendMessage = useCallback(async (
     options: Omit<SendMessageOptions, 'history' | 'apiKey'>,
     onChunk?: (chunk: string) => void,
   ): Promise<string> => {
-    if (!supabase || !conversationId) throw new Error('Not ready')
+    if (!conversationId) throw new Error('No conversation')
     setError(null)
 
     const userMsg: Message = {
@@ -48,13 +68,18 @@ export function useMessages(conversationId: string | undefined) {
 
     setMessages((prev) => [...prev, userMsg])
 
-    await supabase.from('messages').insert({
-      id: userMsg.id,
-      conversation_id: conversationId,
-      role: 'user',
-      content: options.content,
-      model_id: options.model.id,
-    })
+    if (!demoMode && supabase) {
+      await supabase.from('messages').insert({
+        id: userMsg.id,
+        conversation_id: conversationId,
+        role: 'user',
+        content: options.content,
+        model_id: options.model.id,
+      })
+    } else if (demoMode) {
+      const updated = [...getDemoMessages(), userMsg]
+      saveDemoMessages(updated)
+    }
 
     const assistantId = crypto.randomUUID()
     const assistantMsg: Message = {
@@ -91,13 +116,23 @@ export function useMessages(conversationId: string | undefined) {
         )
       }
 
-      await supabase.from('messages').insert({
-        id: assistantId,
-        conversation_id: conversationId,
-        role: 'assistant',
+      const finalAssistantMsg: Message = {
+        ...assistantMsg,
         content: fullContent,
-        model_id: options.model.id,
-      })
+      }
+
+      if (!demoMode && supabase) {
+        await supabase.from('messages').insert({
+          id: assistantId,
+          conversation_id: conversationId,
+          role: 'assistant',
+          content: fullContent,
+          model_id: options.model.id,
+        })
+      } else if (demoMode) {
+        const updated = [...getDemoMessages(), finalAssistantMsg]
+        saveDemoMessages(updated)
+      }
 
       return fullContent
     } catch (err) {
@@ -108,7 +143,7 @@ export function useMessages(conversationId: string | undefined) {
     } finally {
       setStreaming(false)
     }
-  }, [supabase, conversationId, messages])
+  }, [supabase, conversationId, messages, demoMode])
 
   const clearMessages = useCallback(() => {
     setMessages([])
