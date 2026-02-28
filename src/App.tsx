@@ -6,7 +6,7 @@ import { AuthPage } from './pages/AuthPage'
 import { ChatPage } from './pages/ChatPage'
 
 function AppContent() {
-  const { configured, user, loading } = useSupabase()
+  const { configured, user, loading, demoMode } = useSupabase()
 
   if (!configured) {
     return <SetupPage />
@@ -20,7 +20,7 @@ function AppContent() {
     )
   }
 
-  if (!user) {
+  if (!user && !demoMode) {
     return <AuthPage />
   }
 

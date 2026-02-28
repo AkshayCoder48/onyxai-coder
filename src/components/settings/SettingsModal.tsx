@@ -15,7 +15,7 @@ interface SettingsModalProps {
 }
 
 function SupabaseTab() {
-  const { configure, disconnect, configured } = useSupabase()
+  const { configure, disconnect, configured, demoMode, enableDemo } = useSupabase()
   const config = getSupabaseConfig()
   const [url, setUrl] = useState(config?.url ?? '')
   const [anonKey, setAnonKey] = useState(config?.anonKey ?? '')
@@ -35,6 +35,13 @@ function SupabaseTab() {
     }
   }
 
+  const handleEnableDemo = () => {
+    enableDemo()
+    setUrl('')
+    setAnonKey('')
+    toast.success('Demo mode enabled')
+  }
+
   return (
     <div className="space-y-5">
       <div className="p-3 bg-blue-900/20 border border-blue-800 rounded-lg">
@@ -45,52 +52,75 @@ function SupabaseTab() {
         </p>
       </div>
 
-      {configured && (
+      {demoMode && (
+        <div className="flex items-center gap-2 p-2.5 bg-purple-900/20 border border-purple-800 rounded-lg">
+          <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+          <p className="text-xs text-purple-400">Demo mode active (data stored locally)</p>
+        </div>
+      )}
+
+      {configured && !demoMode && (
         <div className="flex items-center gap-2 p-2.5 bg-green-900/20 border border-green-800 rounded-lg">
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <p className="text-xs text-green-400">Connected to Supabase</p>
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-3">
-        <Input
-          label="Supabase URL"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://your-project.supabase.co"
-          type="url"
-        />
-        <div className="relative">
+      {!demoMode && (
+        <form onSubmit={handleSave} className="space-y-3">
           <Input
-            label="Anon Key"
-            value={anonKey}
-            onChange={(e) => setAnonKey(e.target.value)}
-            placeholder="eyJ..."
-            type="password"
+            label="Supabase URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://your-project.supabase.co"
+            type="url"
           />
-        </div>
+          <div className="relative">
+            <Input
+              label="Anon Key"
+              value={anonKey}
+              onChange={(e) => setAnonKey(e.target.value)}
+              placeholder="eyJ..."
+              type="password"
+            />
+          </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" loading={saving} disabled={!url.trim() || !anonKey.trim()} className="flex-1">
-            <Database size={14} />
-            {configured ? 'Update Connection' : 'Connect'}
-          </Button>
-          {configured && (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                disconnect()
-                setUrl('')
-                setAnonKey('')
-                toast.success('Disconnected from Supabase')
-              }}
-            >
-              Disconnect
+          <div className="flex gap-2">
+            <Button type="submit" loading={saving} disabled={!url.trim() || !anonKey.trim()} className="flex-1">
+              <Database size={14} />
+              {configured ? 'Update Connection' : 'Connect'}
             </Button>
-          )}
+            {configured && (
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => {
+                  disconnect()
+                  setUrl('')
+                  setAnonKey('')
+                  toast.success('Disconnected from Supabase')
+                }}
+              >
+                Disconnect
+              </Button>
+            )}
+          </div>
+        </form>
+      )}
+
+      {demoMode && (
+        <div className="text-center py-2">
+          <Button
+            onClick={() => {
+              disconnect()
+              toast.success('Demo mode disabled')
+            }}
+            className="w-full"
+          >
+            Exit Demo Mode
+          </Button>
         </div>
-      </form>
+      )}
 
       <div className="border-t border-gray-800 pt-4">
         <h3 className="text-sm font-semibold text-gray-300 mb-2">Required Tables</h3>
