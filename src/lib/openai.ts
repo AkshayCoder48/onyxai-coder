@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import type { Message, Model, SendMessageOptions } from '../types'
+import { isPuterAvailable, streamPuterAI } from './puter'
 
 function getOpenAIClient(apiKey: string, baseURL?: string): OpenAI {
   return new OpenAI({
@@ -252,10 +253,40 @@ export async function* streamGroqChat(
   }
 }
 
+export async function* streamPuterChat(
+  options: SendMessageOptions,
+): AsyncGenerator<string> {
+  const { model, systemPrompt, temperature, maxTokens, history, content } = options
+
+  const messages = history.map((m) => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.content,
+  }))
+  messages.push({ role: 'user', content })
+
+  if (systemPrompt) {
+    messages.unshift({ role: 'assistant', content: systemPrompt })
+  }
+
+  yield* streamPuterAI({
+    model: model.id,
+    messages,
+    temperature,
+    max_tokens: maxTokens,
+  })
+}
+
 export async function* streamChat(
   options: SendMessageOptions,
 ): AsyncGenerator<string> {
   const { provider } = options.model
+
+  // Check if this is a Puter AI model (custom provider when Puter is available)
+  if (provider === 'custom' && isPuterAvailable()) {
+    yield* streamPuterChat(options)
+    return
+  }
+
   switch (provider) {
     case 'openai':
       yield* streamOpenAIChat(options)

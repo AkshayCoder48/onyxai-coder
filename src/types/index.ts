@@ -87,3 +87,62 @@ export interface SendMessageOptions {
   maxTokens?: number
   history: Message[]
 }
+
+// Mindstore types
+export interface MindstoreItem {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  category: string | null
+  tags: string[]
+  is_prompt: boolean
+  is_favorite: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MindstoreCategory {
+  id: string
+  name: string
+  color: string
+}
+
+// Image Gallery types
+export interface GalleryImage {
+  id: string
+  user_id: string
+  filename: string
+  url: string
+  thumbnail_url: string | null
+  size: number
+  mime_type: string
+  width: number | null
+  height: number | null
+  prompt: string | null
+  model: string | null
+  tags: string[]
+  created_at: string
+}
+
+// Theme types
+export type ThemeMode = 'dark' | 'light' | 'system'
+export type AccentColor = 'purple' | 'blue' | 'green' | 'orange' | 'pink' | 'cyan'
+
+export interface ThemeSettings {
+  mode: ThemeMode
+  accentColor: AccentColor
+}
+
+// Puter AI types
+export interface PuterAIMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface PuterAIStreamOptions {
+  model: string
+  messages: PuterAIMessage[]
+  temperature?: number
+  max_tokens?: number
+}

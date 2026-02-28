@@ -1,10 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Sidebar } from '../components/layout/Sidebar'
-import { ChatArea } from '../components/chat/ChatArea'
-import { ChatInput } from '../components/chat/ChatInput'
-import { SettingsModal } from '../components/settings/SettingsModal'
-import { WorkspaceModal } from '../components/workspace/WorkspaceModal'
-import { useSupabase } from '../contexts/SupabaseContext'
 import { useWorkspace } from '../contexts/WorkspaceContext'
 import { useApiKeys } from '../contexts/ApiKeyContext'
 import { useConversations } from '../hooks/useConversations'
@@ -12,19 +6,23 @@ import { useMessages } from '../hooks/useMessages'
 import { MODELS, getModelById } from '../lib/models'
 import { generateTitle } from '../lib/utils'
 import type { Model, Workspace } from '../types'
-import { Settings, PanelLeft, PanelLeftClose, Edit2 } from 'lucide-react'
+import { Edit2, ChevronDown } from 'lucide-react'
+import { WorkspaceModal } from '../components/workspace/WorkspaceModal'
+import { SettingsModal } from '../components/settings/SettingsModal'
+import { ChatArea } from '../components/chat/ChatArea'
+import { ChatInput } from '../components/chat/ChatInput'
+import { cn } from '../lib/utils'
 import toast from 'react-hot-toast'
 
 export function ChatPage() {
-  const { user, signOut } = useSupabase()
   const { workspaces, activeWorkspace, setActiveWorkspace, createWorkspace, updateWorkspace } = useWorkspace()
   const { getKeyForProvider } = useApiKeys()
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [workspaceModalOpen, setWorkspaceModalOpen] = useState(false)
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null)
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false)
 
   const defaultModel = activeWorkspace
     ? getModelById(activeWorkspace.model_id) ?? MODELS[0]
@@ -137,6 +135,7 @@ export function ChatPage() {
   const handleSelectWorkspace = useCallback((ws: Workspace) => {
     setActiveWorkspace(ws)
     setActiveConversationId(null)
+    setWorkspaceMenuOpen(false)
   }, [setActiveWorkspace])
 
   const handleCreateWorkspace = useCallback(() => {
@@ -154,60 +153,127 @@ export function ChatPage() {
   }, [editingWorkspace, updateWorkspace, createWorkspace, setActiveWorkspace])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-950">
-      {sidebarOpen && (
-        <Sidebar
-          workspaces={workspaces}
-          activeWorkspace={activeWorkspace}
-          conversations={conversations}
-          activeConversationId={activeConversationId}
-          loadingConversations={convsLoading}
-          userName={user?.email ?? null}
-          onSelectWorkspace={handleSelectWorkspace}
-          onCreateWorkspace={handleCreateWorkspace}
-          onSelectConversation={handleSelectConversation}
-          onNewConversation={handleNewConversation}
-          onDeleteConversation={handleDeleteConversation}
-          onRenameConversation={updateConversationTitle}
-          onOpenSettings={() => setSettingsOpen(true)}
-          onSignOut={signOut}
-        />
-      )}
-
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-950 shrink-0">
-          <div className="flex items-center gap-3">
+    <div className="flex h-full">
+      {/* Conversations Sidebar */}
+      <div className="w-64 border-r border-gray-800 bg-gray-950 flex flex-col">
+        {/* Workspace Selector */}
+        <div className="p-3 border-b border-gray-800">
+          <div className="relative">
             <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="text-gray-500 hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-800"
+              onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-colors"
             >
-              {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+              <span className="text-sm font-medium text-gray-200 truncate">
+                {activeWorkspace?.name ?? 'Select Workspace'}
+              </span>
+              <ChevronDown size={16} className={cn("text-gray-500 transition-transform", workspaceMenuOpen && "rotate-180")} />
             </button>
 
-            {activeWorkspace && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">{activeWorkspace.name}</span>
-                <button
-                  onClick={() => {
-                    setEditingWorkspace(activeWorkspace)
-                    setWorkspaceModalOpen(true)
-                  }}
-                  className="text-gray-600 hover:text-gray-400 transition-colors"
-                >
-                  <Edit2 size={12} />
-                </button>
-              </div>
+            {workspaceMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setWorkspaceMenuOpen(false)}
+                />
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden">
+                  {workspaces.map((ws) => (
+                    <button
+                      key={ws.id}
+                      onClick={() => handleSelectWorkspace(ws)}
+                      className={cn(
+                        'w-full text-left px-3 py-2 text-sm transition-colors',
+                        activeWorkspace?.id === ws.id
+                          ? 'bg-onyx-900 text-onyx-300'
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200',
+                      )}
+                    >
+                      {ws.name}
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-800" />
+                  <button
+                    onClick={() => {
+                      setWorkspaceMenuOpen(false)
+                      handleCreateWorkspace()
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+                  >
+                    + New Workspace
+                  </button>
+                </div>
+              </>
             )}
           </div>
 
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="text-gray-500 hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-800"
-          >
-            <Settings size={18} />
-          </button>
-        </header>
+          {activeWorkspace && (
+            <button
+              onClick={() => {
+                setEditingWorkspace(activeWorkspace)
+                setWorkspaceModalOpen(true)
+              }}
+              className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              <Edit2 size={12} />
+              Edit workspace
+            </button>
+          )}
+        </div>
 
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex items-center justify-between px-2 py-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Conversations</span>
+            <button
+              onClick={handleNewConversation}
+              className="text-xs text-onyx-400 hover:text-onyx-300 transition-colors"
+            >
+              + New
+            </button>
+          </div>
+
+          {convsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-4 h-4 border-2 border-onyx-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : conversations.length === 0 ? (
+            <p className="text-xs text-gray-600 px-2 py-3">No conversations yet</p>
+          ) : (
+            <div className="space-y-0.5">
+              {conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={cn(
+                    'group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors',
+                    activeConversationId === conv.id
+                      ? 'bg-gray-800'
+                      : 'hover:bg-gray-900',
+                  )}
+                  onClick={() => handleSelectConversation(conv)}
+                >
+                  <span className={cn(
+                    'flex-1 text-xs truncate',
+                    activeConversationId === conv.id ? 'text-gray-200' : 'text-gray-400',
+                  )}>
+                    {conv.title}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteConversation(conv.id)
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col min-w-0">
         <ChatArea
           messages={messages}
           loading={msgsLoading}
