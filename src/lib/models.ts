@@ -1,6 +1,8 @@
 import type { Model } from '../types'
+import { isPuterAvailable } from './puter'
 
 export const MODELS: Model[] = [
+  // OpenAI
   {
     id: 'gpt-4o',
     name: 'GPT-4o',
@@ -37,6 +39,7 @@ export const MODELS: Model[] = [
     supports_vision: false,
     supports_streaming: true,
   },
+  // Anthropic
   {
     id: 'claude-3-5-sonnet-20241022',
     name: 'Claude 3.5 Sonnet',
@@ -64,6 +67,7 @@ export const MODELS: Model[] = [
     supports_vision: true,
     supports_streaming: true,
   },
+  // Google
   {
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
@@ -82,6 +86,7 @@ export const MODELS: Model[] = [
     supports_vision: true,
     supports_streaming: true,
   },
+  // Mistral
   {
     id: 'mistral-large-latest',
     name: 'Mistral Large',
@@ -91,6 +96,7 @@ export const MODELS: Model[] = [
     supports_vision: false,
     supports_streaming: true,
   },
+  // Groq
   {
     id: 'mixtral-8x7b-32768',
     name: 'Mixtral 8x7B',
@@ -111,6 +117,36 @@ export const MODELS: Model[] = [
   },
 ]
 
+export const PUTER_MODELS: Model[] = [
+  {
+    id: 'gpt-4o',
+    name: 'GPT-4o (Puter)',
+    provider: 'custom',
+    description: 'GPT-4o via Puter AI',
+    context_window: 128000,
+    supports_vision: true,
+    supports_streaming: true,
+  },
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini (Puter)',
+    provider: 'custom',
+    description: 'GPT-4o Mini via Puter AI',
+    context_window: 128000,
+    supports_vision: true,
+    supports_streaming: true,
+  },
+  {
+    id: 'claude-3-5-sonnet',
+    name: 'Claude 3.5 Sonnet (Puter)',
+    provider: 'custom',
+    description: 'Claude 3.5 Sonnet via Puter AI',
+    context_window: 200000,
+    supports_vision: true,
+    supports_streaming: true,
+  },
+]
+
 export const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
@@ -119,12 +155,20 @@ export const PROVIDER_LABELS: Record<string, string> = {
   groq: 'Groq',
   cohere: 'Cohere',
   custom: 'Custom',
+  puter: 'Puter AI',
 }
 
 export function getModelById(id: string): Model | undefined {
-  return MODELS.find((m) => m.id === id)
+  // Check if Puter is available and return Puter models if needed
+  const allModels = isPuterAvailable() ? [...MODELS, ...PUTER_MODELS] : MODELS
+  return allModels.find((m) => m.id === id)
 }
 
 export function getModelsByProvider(provider: string): Model[] {
-  return MODELS.filter((m) => m.provider === provider)
+  const allModels = isPuterAvailable() ? [...MODELS, ...PUTER_MODELS] : MODELS
+  return allModels.filter((m) => m.provider === provider)
+}
+
+export function getAllAvailableModels(): Model[] {
+  return isPuterAvailable() ? [...MODELS, ...PUTER_MODELS] : MODELS
 }

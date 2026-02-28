@@ -5,13 +5,14 @@ import { Input } from '../ui/Input'
 import { Badge } from '../ui/Badge'
 import { useApiKeys } from '../../contexts/ApiKeyContext'
 import { useSupabase } from '../../contexts/SupabaseContext'
-import type { ApiKey } from '../../types'
-import { Trash2, Eye, EyeOff, Plus, Key, Database, Link2, Info } from 'lucide-react'
+import { useTheme, ACCENT_COLORS } from '../../contexts/ThemeContext'
+import type { ApiKey, ThemeMode, AccentColor } from '../../types'
+import { Trash2, Eye, EyeOff, Plus, Key, Database, Link2, Info, Palette, Moon, Sun, Monitor } from 'lucide-react'
 import { PROVIDER_LABELS } from '../../lib/models'
 import { getSupabaseConfig } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
-type Tab = 'api-keys' | 'supabase' | 'about'
+type Tab = 'api-keys' | 'supabase' | 'appearance' | 'about'
 
 interface SettingsModalProps {
   open: boolean
@@ -19,6 +20,12 @@ interface SettingsModalProps {
 }
 
 const PROVIDERS: ApiKey['provider'][] = ['openai', 'anthropic', 'google', 'mistral', 'groq']
+
+const THEME_MODES: { id: ThemeMode; label: string; icon: React.ReactNode }[] = [
+  { id: 'dark', label: 'Dark', icon: <Moon size={16} /> },
+  { id: 'light', label: 'Light', icon: <Sun size={16} /> },
+  { id: 'system', label: 'System', icon: <Monitor size={16} /> },
+]
 
 function ApiKeysTab() {
   const { apiKeys, addApiKey, removeApiKey } = useApiKeys()
@@ -88,7 +95,7 @@ function ApiKeysTab() {
           Add API Key
         </h3>
         <form onSubmit={handleAdd} className="space-y-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {PROVIDERS.map((p) => (
               <button
                 key={p}
@@ -222,7 +229,7 @@ function SupabaseTab() {
         <p className="text-xs text-gray-500 mb-3">
           Run this SQL in your Supabase SQL editor to create the required tables:
         </p>
-        <pre className="bg-gray-900 border border-gray-800 rounded-lg p-3 text-xs text-gray-400 overflow-x-auto whitespace-pre font-mono leading-relaxed">
+        <pre className="bg-gray-900 border border-gray-800 rounded-lg p-3 text-xs text-gray-400 overflow-x-auto whitespace-pre font-mono leading-relaxed max-h-64 overflow-y-auto">
 {`-- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
@@ -290,8 +297,114 @@ create table api_keys (
 );
 alter table api_keys enable row level security;
 create policy "Users own api_keys" on api_keys
-  for all using (auth.uid() = user_id);`}
+  for all using (auth.uid() = user_id);
+
+-- Mindstore Items
+create table mindstore_items (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null,
+  title text not null,
+  content text not null,
+  category text,
+  tags text[] default '{}',
+  is_prompt boolean default false,
+  is_favorite boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table mindstore_items enable row level security;
+create policy "Users own mindstore_items" on mindstore_items
+  for all using (auth.uid() = user_id);
+
+-- Gallery Images
+create table gallery_images (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null,
+  filename text not null,
+  url text not null,
+  thumbnail_url text,
+  size int not null,
+  mime_type text not null,
+  width int,
+  height int,
+  prompt text,
+  model text,
+  tags text[] default '{}',
+  created_at timestamptz default now()
+);
+alter table gallery_images enable row level security;
+create policy "Users own gallery_images" on gallery_images
+  for all using (auth.uid() = user_id);
+
+-- Create storage bucket for gallery
+insert into storage.buckets (id, name, public) values ('gallery', 'gallery', true);
+
+-- Storage policies
+create policy "Users can upload their own images" on storage.objects
+  for insert with check (bucket_id = 'gallery' and auth.uid()::text = (storage.foldername(name))[1]);
+create policy "Users can view their own images" on storage.objects
+  for select using (bucket_id = 'gallery' and auth.uid()::text = (storage.foldername(name))[1]);
+create policy "Users can delete their own images" on storage.objects
+  for delete using (bucket_id = 'gallery' and auth.uid()::text = (storage.foldername(name))[1]);`}
         </pre>
+      </div>
+    </div>
+  )
+}
+
+function AppearanceTab() {
+  const { settings, setMode, setAccentColor } = useTheme()
+
+  return (
+    <div className="space-y-6">
+      {/* Theme Mode */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+          <Palette size={14} className="text-onyx-400" />
+          Theme Mode
+        </h3>
+        <div className="grid grid-cols-3 gap-2">
+          {THEME_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => setMode(mode.id)}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                settings.mode === mode.id
+                  ? 'bg-onyx-900 border-onyx-600 text-onyx-300'
+                  : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300'
+              }`}
+            >
+              {mode.icon}
+              <span className="text-xs font-medium">{mode.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Accent Color */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+          <div
+            className="w-4 h-4 rounded-full"
+            style={{ backgroundColor: ACCENT_COLORS[settings.accentColor].primary }}
+          />
+          Accent Color
+        </h3>
+        <div className="grid grid-cols-6 gap-2">
+          {(Object.keys(ACCENT_COLORS) as AccentColor[]).map((color) => (
+            <button
+              key={color}
+              onClick={() => setAccentColor(color)}
+              className={`w-10 h-10 rounded-xl transition-all ${
+                settings.accentColor === color
+                  ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-950 scale-110'
+                  : 'hover:scale-105'
+              }`}
+              style={{ backgroundColor: ACCENT_COLORS[color].primary }}
+              title={color}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -317,10 +430,13 @@ function AboutTab() {
             {[
               'Multi-provider support (OpenAI, Anthropic, Google, Mistral, Groq)',
               'Workspace-based organization',
+              'Mindstore for prompts and snippets',
+              'Image gallery with storage',
               'Streaming responses',
               'Markdown rendering with syntax highlighting',
               'BYOK — Bring Your Own Keys',
               'BYOS — Bring Your Own Supabase',
+              'Light/Dark themes with accent colors',
             ].map((f) => (
               <li key={f} className="flex items-start gap-2">
                 <span className="text-onyx-400 mt-0.5">•</span>
@@ -340,6 +456,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'api-keys', label: 'API Keys', icon: <Key size={14} /> },
     { id: 'supabase', label: 'Supabase', icon: <Database size={14} /> },
+    { id: 'appearance', label: 'Appearance', icon: <Palette size={14} /> },
     { id: 'about', label: 'About', icon: <Info size={14} /> },
   ]
 
@@ -366,6 +483,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         <div className="flex-1 overflow-y-auto">
           {tab === 'api-keys' && <ApiKeysTab />}
           {tab === 'supabase' && <SupabaseTab />}
+          {tab === 'appearance' && <AppearanceTab />}
           {tab === 'about' && <AboutTab />}
         </div>
       </div>

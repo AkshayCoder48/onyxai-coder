@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { Send, Square } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Model } from '../../types'
-import { MODELS, PROVIDER_LABELS } from '../../lib/models'
+import { getAllAvailableModels, PROVIDER_LABELS } from '../../lib/models'
 
 interface ChatInputProps {
   onSend: (content: string) => void
@@ -50,7 +50,8 @@ export function ChatInput({
     }
   }
 
-  const grouped = MODELS.reduce<Record<string, Model[]>>((acc, m) => {
+  const allModels = getAllAvailableModels()
+  const grouped = allModels.reduce<Record<string, Model[]>>((acc, m) => {
     const p = m.provider
     if (!acc[p]) acc[p] = []
     acc[p].push(m)
@@ -77,7 +78,7 @@ export function ChatInput({
               <select
                 value={selectedModel.id}
                 onChange={(e) => {
-                  const model = MODELS.find((m) => m.id === e.target.value)
+                  const model = allModels.find((m) => m.id === e.target.value)
                   if (model) onSelectModel(model)
                 }}
                 className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-onyx-500 cursor-pointer"
