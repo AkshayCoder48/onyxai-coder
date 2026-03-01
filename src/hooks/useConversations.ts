@@ -3,12 +3,12 @@ import type { Conversation } from '../types'
 import { useSupabase } from '../contexts/SupabaseContext'
 
 export function useConversations(workspaceId: string | undefined) {
-  const { supabase, user } = useSupabase()
+  const { supabase, userId } = useSupabase()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(false)
 
   const fetchConversations = useCallback(async () => {
-    if (!supabase || !user || !workspaceId) {
+    if (!supabase || !userId || !workspaceId) {
       setConversations([])
       return
     }
@@ -24,24 +24,24 @@ export function useConversations(workspaceId: string | undefined) {
     } finally {
       setLoading(false)
     }
-  }, [supabase, user, workspaceId])
+  }, [supabase, userId, workspaceId])
 
   useEffect(() => {
     fetchConversations()
-  }, [workspaceId, supabase, user]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [workspaceId, supabase, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const createConversation = useCallback(async (title: string): Promise<Conversation> => {
-    if (!supabase || !user || !workspaceId) throw new Error('Not ready')
+    if (!supabase || !userId || !workspaceId) throw new Error('Not ready')
     const { data, error } = await supabase
       .from('conversations')
-      .insert({ workspace_id: workspaceId, user_id: user.id, title })
+      .insert({ workspace_id: workspaceId, user_id: userId, title })
       .select()
       .single()
     if (error) throw error
     const conv = data as Conversation
     setConversations((prev) => [conv, ...prev])
     return conv
-  }, [supabase, user, workspaceId])
+  }, [supabase, userId, workspaceId])
 
   const updateConversationTitle = useCallback(async (id: string, title: string) => {
     if (!supabase) return

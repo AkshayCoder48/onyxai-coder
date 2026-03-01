@@ -4,7 +4,7 @@ import { ChatArea } from '../components/chat/ChatArea'
 import { ChatInput } from '../components/chat/ChatInput'
 import { SettingsModal } from '../components/settings/SettingsModal'
 import { WorkspaceModal } from '../components/workspace/WorkspaceModal'
-import { useSupabase } from '../contexts/SupabaseContext'
+import { usePuterAuth } from '../contexts/PuterAuthContext'
 import { useWorkspace } from '../contexts/WorkspaceContext'
 import { useConversations } from '../hooks/useConversations'
 import { useMessages } from '../hooks/useMessages'
@@ -15,7 +15,7 @@ import { Settings, PanelLeft, PanelLeftClose, Edit2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export function ChatPage() {
-  const { user, signOut } = useSupabase()
+  const { user, signOut } = usePuterAuth()
   const { workspaces, activeWorkspace, setActiveWorkspace, createWorkspace, updateWorkspace } = useWorkspace()
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
@@ -151,7 +151,7 @@ export function ChatPage() {
           conversations={conversations}
           activeConversationId={activeConversationId}
           loadingConversations={convsLoading}
-          userName={user?.email ?? null}
+          userName={user?.username ?? null}
           onSelectWorkspace={handleSelectWorkspace}
           onCreateWorkspace={handleCreateWorkspace}
           onSelectConversation={handleSelectConversation}

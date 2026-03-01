@@ -25,13 +25,13 @@ const DEFAULT_WORKSPACE_TEMPLATE = {
 }
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const { supabase, user } = useSupabase()
+  const { supabase, userId } = useSupabase()
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null)
   const [loading, setLoading] = useState(false)
 
   const fetchWorkspaces = useCallback(async () => {
-    if (!supabase || !user) {
+    if (!supabase || !userId) {
       setWorkspaces([])
       setActiveWorkspace(null)
       return
@@ -51,26 +51,26 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [supabase, user, activeWorkspace])
+  }, [supabase, userId, activeWorkspace])
 
   useEffect(() => {
     fetchWorkspaces()
-  }, [supabase, user]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, userId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const createWorkspace = useCallback(async (
     data: Omit<Workspace, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
   ): Promise<Workspace> => {
-    if (!supabase || !user) throw new Error('Not authenticated')
+    if (!supabase || !userId) throw new Error('Not authenticated')
     const { data: ws, error } = await supabase
       .from('workspaces')
-      .insert({ ...data, user_id: user.id })
+      .insert({ ...data, user_id: userId })
       .select()
       .single()
     if (error) throw error
     const workspace = ws as Workspace
     setWorkspaces((prev) => [...prev, workspace])
     return workspace
-  }, [supabase, user])
+  }, [supabase, userId])
 
   const updateWorkspace = useCallback(async (id: string, data: Partial<Workspace>) => {
     if (!supabase) throw new Error('Not authenticated')

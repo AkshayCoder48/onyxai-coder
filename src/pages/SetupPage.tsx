@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -10,6 +10,7 @@ export function SetupPage() {
   const [url, setUrl] = useState('')
   const [anonKey, setAnonKey] = useState('')
   const [loading, setLoading] = useState(false)
+
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!url.trim() || !anonKey.trim()) return
@@ -35,8 +36,8 @@ export function SetupPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-onyx-900 border border-onyx-700 rounded-2xl mb-4">
             <MessageSquare size={28} className="text-onyx-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to OnyxGPT</h1>
-          <p className="text-gray-400">Connect your Supabase project to get started</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Set Up Data Storage</h1>
+          <p className="text-gray-400">Connect your Supabase project to save your conversations</p>
         </div>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
@@ -64,7 +65,7 @@ export function SetupPage() {
               onChange={(e) => setAnonKey(e.target.value)}
               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               type="password"
-              hint="Found in Settings > API in your Supabase dashboard"
+              hint="Found in Settings &gt; API in your Supabase dashboard"
               required
             />
             <Button
