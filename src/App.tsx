@@ -1,6 +1,6 @@
 import { Toaster } from 'react-hot-toast'
 import { PuterAuthProvider, usePuterAuth } from './contexts/PuterAuthContext'
-import { SupabaseProvider, useSupabase } from './contexts/SupabaseContext'
+import { TursoProvider, useTurso } from './contexts/TursoContext'
 import { WorkspaceProvider } from './contexts/WorkspaceContext'
 import { SetupPage } from './pages/SetupPage'
 import { AuthPage } from './pages/AuthPage'
@@ -8,7 +8,7 @@ import { ChatPage } from './pages/ChatPage'
 
 function AppContent() {
   const { user: puterUser, loading: authLoading } = usePuterAuth()
-  const { configured } = useSupabase()
+  const { configured } = useTurso()
 
   if (authLoading) {
     return (
@@ -36,7 +36,7 @@ function AppContent() {
 export default function App() {
   return (
     <PuterAuthProvider>
-      <SupabaseProvider>
+      <TursoProvider>
         <AppContent />
         <Toaster
           position="bottom-right"
@@ -56,7 +56,7 @@ export default function App() {
             },
           }}
         />
-      </SupabaseProvider>
+      </TursoProvider>
     </PuterAuthProvider>
   )
 }

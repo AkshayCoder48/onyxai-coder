@@ -1,33 +1,8 @@
-import { useState } from 'react'
-import { useSupabase } from '../contexts/SupabaseContext'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Database, MessageSquare, Key, Sparkles, Info } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Database, Key, MessageSquare, Info } from 'lucide-react'
+import { useTurso } from '../contexts/TursoContext'
 
 export function SetupPage() {
-  const { configure } = useSupabase()
-  const [url, setUrl] = useState('')
-  const [anonKey, setAnonKey] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const handleConnect = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!url.trim() || !anonKey.trim()) return
-    setLoading(true)
-    try {
-      await configure(url.trim(), anonKey.trim())
-      toast.success('Connected to Supabase!')
-    } catch {
-      toast.error('Failed to connect. Check your URL and key.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSkip = () => {
-    configure('https://placeholder.supabase.co', 'placeholder-key').catch(() => {})
-  }
+  const { configured } = useTurso()
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
@@ -36,81 +11,40 @@ export function SetupPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-onyx-900 border border-onyx-700 rounded-2xl mb-4">
             <MessageSquare size={28} className="text-onyx-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Set Up Data Storage</h1>
-          <p className="text-gray-400">Connect your Supabase project to save your conversations</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Set Up Turso Storage</h1>
+          <p className="text-gray-400">Connect your Turso database to save conversations securely</p>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <div className="flex items-start gap-2 p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg mb-5">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5">
+          <div className="flex items-start gap-2 p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
             <Info size={14} className="text-blue-400 mt-0.5 shrink-0" />
             <p className="text-xs text-blue-300">
-              OnyxGPT uses Bring Your Own Supabase (BYOS). Your data is stored in your own project.
-              No data is sent to any third party.
+              OnyxGPT now stores data in Turso (libSQL). Configure the environment variables below in
+              Vercel and redeploy the project to enable persistence.
             </p>
           </div>
 
-          <form onSubmit={handleConnect} className="space-y-4">
-            <Input
-              label="Supabase Project URL"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://xxxx.supabase.co"
-              type="url"
-              hint="Found in your Supabase project settings"
-              required
-            />
-            <Input
-              label="Anon / Public Key"
-              value={anonKey}
-              onChange={(e) => setAnonKey(e.target.value)}
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-              type="password"
-              hint="Found in Settings &gt; API in your Supabase dashboard"
-              required
-            />
-            <Button
-              type="submit"
-              loading={loading}
-              disabled={!url.trim() || !anonKey.trim()}
-              className="w-full"
-              size="lg"
-            >
-              <Database size={16} />
-              Connect Supabase
-            </Button>
-          </form>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-800" />
+          <div className="space-y-3 text-sm text-gray-300">
+            <div className="flex items-center gap-2">
+              <Database size={16} className="text-onyx-400" />
+              <span className="font-medium">TURSO_DATABASE_URL</span>
             </div>
-            <div className="relative flex justify-center">
-              <span className="bg-gray-900 px-2 text-xs text-gray-500">or</span>
+            <div className="flex items-center gap-2">
+              <Key size={16} className="text-onyx-400" />
+              <span className="font-medium">TURSO_AUTH_TOKEN</span>
             </div>
           </div>
 
-          <button
-            onClick={handleSkip}
-            className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors py-2"
-          >
-            Continue without Supabase (demo mode)
-          </button>
-        </div>
+          <pre className="bg-gray-950 border border-gray-800 rounded-lg p-3 text-xs text-gray-400 overflow-x-auto whitespace-pre font-mono leading-relaxed">
+{`TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-auth-token`}
+          </pre>
 
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          {[
-            { icon: <Key size={16} />, title: 'Free AI', desc: 'Powered by Puter AI' },
-            { icon: <Database size={16} />, title: 'Your Data', desc: 'Stored in your Supabase' },
-            { icon: <Sparkles size={16} />, title: 'Web Search', desc: 'Real-time information' },
-          ].map((f) => (
-            <div key={f.title} className="text-center">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-900 border border-gray-800 rounded-lg text-onyx-400 mb-2">
-                {f.icon}
-              </div>
-              <p className="text-xs font-medium text-gray-300">{f.title}</p>
-              <p className="text-xs text-gray-600">{f.desc}</p>
-            </div>
-          ))}
+          <div className="text-xs text-gray-500">
+            {configured
+              ? 'Turso is configured. Reload the app to continue.'
+              : 'Once set, redeploy the app and refresh this page.'}
+          </div>
         </div>
       </div>
     </div>
