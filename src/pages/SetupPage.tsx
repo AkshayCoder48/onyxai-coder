@@ -98,9 +98,9 @@ export function SetupPage() {
 
         <div className="mt-6 grid grid-cols-3 gap-4">
           {[
-            { icon: <Key size={16} />, title: 'Your Keys', desc: 'Use your own API keys' },
+            { icon: <Key size={16} />, title: 'Free AI', desc: 'Powered by Puter AI' },
             { icon: <Database size={16} />, title: 'Your Data', desc: 'Stored in your Supabase' },
-            { icon: <Sparkles size={16} />, title: 'Any Model', desc: 'OpenAI, Anthropic & more' },
+            { icon: <Sparkles size={16} />, title: 'Web Search', desc: 'Real-time information' },
           ].map((f) => (
             <div key={f.title} className="text-center">
               <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-900 border border-gray-800 rounded-lg text-onyx-400 mb-2">
