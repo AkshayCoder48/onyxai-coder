@@ -1,4 +1,4 @@
-import type { Message, Model, SendMessageOptions } from '../types'
+import type { Message, SendMessageOptions } from '../types'
 
 export interface PuterAIResponse {
   text?: string
@@ -68,8 +68,4 @@ export async function* streamChat(
   options: SendMessageOptions,
 ): AsyncGenerator<string> {
   yield* streamPuterChat(options)
-}
-
-export function resolveModelProvider(model: Model): string {
-  return model.provider
 }

@@ -5,7 +5,7 @@ import { Select } from '../ui/Select'
 import { Button } from '../ui/Button'
 import { Slider } from '../ui/Slider'
 import type { Workspace } from '../../types'
-import { MODELS, PROVIDER_LABELS } from '../../lib/models'
+import { MODELS } from '../../lib/models'
 import toast from 'react-hot-toast'
 
 interface WorkspaceModalProps {
@@ -42,12 +42,6 @@ export function WorkspaceModal({ open, onClose, workspace, onSave }: WorkspaceMo
       setForm(DEFAULTS)
     }
   }, [workspace, open])
-
-  const grouped = MODELS.reduce<Record<string, typeof MODELS>>((acc, m) => {
-    if (!acc[m.provider]) acc[m.provider] = []
-    acc[m.provider].push(m)
-    return acc
-  }, {})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,14 +93,10 @@ export function WorkspaceModal({ open, onClose, workspace, onSave }: WorkspaceMo
           value={form.model_id}
           onChange={(e) => setForm((f) => ({ ...f, model_id: e.target.value }))}
         >
-          {Object.entries(grouped).map(([provider, models]) => (
-            <optgroup key={provider} label={PROVIDER_LABELS[provider] ?? provider}>
-              {models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </optgroup>
+          {MODELS.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
           ))}
         </Select>
 

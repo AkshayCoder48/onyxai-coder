@@ -15,7 +15,6 @@ export interface Profile {
 export interface Model {
   id: string
   name: string
-  provider: 'puter'
   description: string
   context_window: number
   supports_vision: boolean

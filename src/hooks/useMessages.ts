@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Message, SendMessageOptions } from '../types'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { streamChat } from '../lib/openai'
+import { streamChat } from '../lib/puter'
 
 export function useMessages(conversationId: string | undefined) {
   const { supabase } = useSupabase()
